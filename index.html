@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Rota Analizi</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link href="styles.css" rel="stylesheet">
+  </head>
+  <body class="bg-gray-100 flex items-center justify-center h-screen">
+    <div class="w-full max-w-4xl p-4 bg-white rounded-lg shadow-lg img">
+      <div id="map" class="mb-4"></div>
+      <details open>
+        <summary class="font-bold text-lg mb-2 rota">Rota Analizi</summary>
+        <a></a>
+        <div id="analysis" class="bg-gray-200 p-4 rounded-lg"></div>
+      </details>
+      <p>Lütfen Hesaplama Bitene Kadar Bekleyiniz.</p>
+      <button id="startCalculation" class="btn-blue">Hesaplamayı Başlat</button>
+    </div>
+    <audio id="backgroundMusic" loop>
+      <source src="music.mp3" type="audio/mpeg">
+      Tarayıcınız bu sesi çalamıyor.
+    </audio>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="map.js"></script>
+    <script src="calculate.js"></script>
+    <script>
+      document.getElementById('startCalculation').addEventListener('click', () => {
+        var audio = document.getElementById('backgroundMusic');
+        audio.play();
+
+        // Hesaplama işlemini başlat
+        startCalculations();
+      });
+
+      function startCalculations() {
+        const distances = calculateDistancesMatrix();
+        permutations = getPermutations(markers.map((_, index) => index));
+        currentBatch = 0;
+        results = [];
+        calculateNextBatch(distances);
+      }
+
+      function calculateNextBatch(distances) {
+        const batchEnd = Math.min(currentBatch + batchSize, permutations.length);
+
+        for (let i = currentBatch; i < batchEnd; i++) {
+          const permutation = permutations[i];
+          const route = getRouteFromPermutation(permutation);
+          const totalDistance = calculateRouteDistance(route, distances);
+          results.push({ route, totalDistance });
+        }
+
+        results.sort((a, b) => a.totalDistance - b.totalDistance);
+        displayRoutes(results);
+
+        currentBatch = batchEnd;
+
+        if (currentBatch < permutations.length) {
+          setTimeout(() => calculateNextBatch(distances), 0);
+        } else {
+          alert('Hesaplama tamamlandı!');
+        }
+      }
+    </script>
+  </body>
+</html>
